@@ -66,9 +66,10 @@ var (
 		},
 	)
 
-	quit      = make(chan struct{})
+	//	quit      = make(chan struct{})
 	startOnce sync.Once
-	stopOnce  sync.Once
+
+//	stopOnce  sync.Once
 )
 
 func init() {
@@ -84,9 +85,6 @@ func startSync(log log.Logger) {
 }
 
 func stopSync() {
-	stopOnce.Do(func() {
-		close(quit)
-	})
 }
 
 func initSync() {
@@ -124,13 +122,6 @@ func listenChanges() {
 	level.Info(logger).Log("msg", "Testmgr synchronizer is started.")
 	index := ""
 	for {
-		select {
-		case <-quit:
-			level.Info(logger).Log("msg", "Testmgr synchronizer is stopped.")
-			return
-		default:
-		}
-
 		level.Debug(logger).Log("msg", "Blocking on AlertRuleTest Changes index="+index)
 		i, ss, err := listenAlertRuleTestChanges(index)
 		if err != nil {
