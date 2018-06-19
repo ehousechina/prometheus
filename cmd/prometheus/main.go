@@ -366,6 +366,28 @@ func main() {
 	// Wait for reload or termination signals.
 	close(hupReady) // Unblock SIGHUP handler.
 
+	// Added by lhe 2018.6.19
+	// Wait for rule manager configuration reload signal
+	sigusr1 := make(chan os.Signal)
+	signal.Notify(sigusr1, syscall.SIGUSR1)
+
+	go func() {
+		//	<-hupReady
+		rulemgrs := []Reloadable{
+			ruleManager,
+		}
+
+		for {
+			select {
+			case <-sigusr1:
+				if err := reloadConfig(cfg.configFile, logger, rulemgrs...); err != nil {
+					level.Error(logger).Log("msg", "Error reloading config for rule manager", "err", err)
+				}
+			}
+		}
+	}()
+	// End of rule manager reload. by lhe
+
 	// Set web server to ready.
 	webHandler.Ready()
 	level.Info(logger).Log("msg", "Server is ready to receive requests.")
