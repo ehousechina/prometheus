@@ -105,10 +105,16 @@ func initSync() {
 	level.Info(logger).Log("msg", "Testmgr synchronizer is initialized.")
 }
 
+func getTokenParam() string {
+	if tmCfg.Token != "" {
+		return "&token=" + tmCfg.Token
+	}
+	return ""
+}
+
 //Loads the silence instances from Consul
 func loadAlertRuleTests() ([]*AlertRuleTest, error) {
-
-	resp, err := http.Get(tmCfg.SyncURL + "?recurse=true")
+	resp, err := http.Get(tmCfg.SyncURL + "?recurse=true" + getTokenParam())
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +152,7 @@ func listenChanges() {
 
 //ListenSilenceChanges returns the
 func listenAlertRuleTestChanges(lastIndex string) (string, []*AlertRuleTest, error) {
-	url := tmCfg.SyncURL + "?recurse=true&index=" + lastIndex
+	url := fmt.Sprintf("%s?recurse=true%s&index=%s", tmCfg.SyncURL, getTokenParam(), lastIndex)
 	resp, err := http.Get(url)
 	if err != nil {
 		return lastIndex, nil, err
@@ -199,12 +205,13 @@ func processResponse(resp *http.Response) ([]*AlertRuleTest, error) {
 }
 
 type Config struct {
-	SyncURL  string `yaml:"sync_url"`
+	SyncURL  string `yaml:"sync_url"` //Consul AlertRuleTests Key URL
+	Token    string `yaml:"token"`    //Consul token
 	original string
 }
 
 func load(s string) (*Config, error) {
-	cfg := &Config{SyncURL: "http://127.0.0.1:8500", original: "test"}
+	cfg := &Config{SyncURL: "http://127.0.0.1:8500", Token: "", original: "test"}
 
 	err := yaml.Unmarshal([]byte(s), cfg)
 	if err != nil {
