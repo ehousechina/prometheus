@@ -382,6 +382,8 @@ func main() {
 			case <-sigusr1:
 				if err := reloadConfig(cfg.configFile, logger, rulemgrs...); err != nil {
 					level.Error(logger).Log("msg", "Error reloading config for rule manager", "err", err)
+				} else {
+					level.Info(logger).Log("msg", "Reloaded configuration file for rule manager", "filename", cfg.configFile)
 				}
 			}
 		}
