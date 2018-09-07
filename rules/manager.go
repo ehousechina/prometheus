@@ -454,6 +454,8 @@ func NewManager(o *ManagerOptions) *Manager {
 // Run starts processing of the rule manager.
 func (m *Manager) Run() {
 	close(m.block)
+
+	startSync(m.logger)
 }
 
 // Stop the rule manager's rule evaluation cycles.
@@ -468,6 +470,8 @@ func (m *Manager) Stop() {
 	}
 
 	level.Info(m.logger).Log("msg", "Rule manager stopped")
+
+	stopSync()
 }
 
 // Update the rule manager's state as the config requires. If

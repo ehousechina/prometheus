@@ -592,6 +592,31 @@ func main() {
 			},
 		)
 	}
+
+	// Added by lhe 2018.6.19
+	// Wait for rule manager configuration reload signal
+	sigusr1 := make(chan os.Signal)
+	signal.Notify(sigusr1, syscall.SIGUSR1)
+
+	go func() {
+		//	<-hupReady
+		rulemgrs := []Reloadable{
+			ruleManager,
+		}
+
+		for {
+			select {
+			case <-sigusr1:
+				if err := reloadConfig(cfg.configFile, logger, rulemgrs...); err != nil {
+					level.Error(logger).Log("msg", "Error reloading config for rule manager", "err", err)
+				} else {
+					level.Info(logger).Log("msg", "Reloaded configuration file for rule manager", "filename", cfg.configFile)
+				}
+			}
+		}
+	}()
+	// End of rule manager reload. by lhe
+
 	if err := g.Run(); err != nil {
 		level.Error(logger).Log("err", err)
 		os.Exit(1)
